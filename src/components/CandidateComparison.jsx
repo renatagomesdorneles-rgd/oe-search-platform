@@ -37,20 +37,20 @@ export default function CandidateComparison({ engagementId }) {
     setLoading(false)
   }
 
-  const ratingColor = (r) => {
-    if (!r) return '#E2E8F0'
-    if (r >= 5) return '#276749'
-    if (r >= 4) return '#2C7A7B'
-    if (r >= 3) return '#B7791F'
-    if (r >= 2) return '#C05621'
-    return '#9B2C2C'
+  const RATING_DISPLAY = {
+    strong:       { label: 'Strong',           color: '#276749', bg: '#F0FFF4' },
+    weak:         { label: 'Weak',             color: '#9B2C2C', bg: '#FFF5F5' },
+    follow_up:    { label: 'Needs Follow-Up',  color: '#B7791F', bg: '#FFFBEB' },
+    not_assessed: { label: 'Not Assessed',     color: '#718096', bg: '#F7FAFC' },
   }
 
-  const avgRating = (ceId) => {
+  const ratingCounts = (ceId) => {
     if (!scores[ceId]) return null
     const ratings = Object.values(scores[ceId]).map(s => s.rating).filter(Boolean)
     if (!ratings.length) return null
-    return (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+    const strong = ratings.filter(r => r === 'strong').length
+    const weak = ratings.filter(r => r === 'weak').length
+    return { strong, weak, total: ratings.length }
   }
 
   if (loading) return <div style={{ padding: '2rem', color: '#718096' }}>Loading comparison...</div>
@@ -88,8 +88,13 @@ export default function CandidateComparison({ engagementId }) {
                     </span>
                   </div>
                 )}
-                {avgRating(ce.id) && (
-                  <div style={{ fontSize: 11, color: '#718096', marginTop: 4 }}>Avg: <strong>{avgRating(ce.id)}</strong>/5</div>
+                {ratingCounts(ce.id) && (
+                  <div style={{ fontSize: 11, color: '#718096', marginTop: 4 }}>
+                    <span style={{ color: '#276749', fontWeight: 600 }}>{ratingCounts(ce.id).strong} Strong</span>
+                    {' · '}
+                    <span style={{ color: '#9B2C2C', fontWeight: 600 }}>{ratingCounts(ce.id).weak} Weak</span>
+                    {' of '}{ratingCounts(ce.id).total}
+                  </div>
                 )}
               </th>
             ))}
@@ -107,15 +112,19 @@ export default function CandidateComparison({ engagementId }) {
                   <td key={ce.id} style={{ padding: '10px 12px', textAlign: 'center', borderBottom: '1px solid #F0F4F8', borderLeft: '1px solid #F0F4F8', verticalAlign: 'top' }}>
                     {score?.rating ? (
                       <div>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, background: ratingColor(score.rating), color: '#fff', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
-                          {score.rating}
+                        <div style={{
+                          display: 'inline-block', padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600, marginBottom: 4,
+                          background: RATING_DISPLAY[score.rating]?.bg || '#F7FAFC',
+                          color: RATING_DISPLAY[score.rating]?.color || '#718096',
+                        }}>
+                          {RATING_DISPLAY[score.rating]?.label || score.rating}
                         </div>
                         {score.narrative && (
                           <div style={{ fontSize: 11, color: '#718096', lineHeight: 1.4, textAlign: 'left', marginTop: 4 }}>{score.narrative}</div>
                         )}
                       </div>
                     ) : (
-                      <span style={{ fontSize: 11, color: '#CBD5E0' }}>Not rated</span>
+                      <span style={{ fontSize: 11, color: '#CBD5E0' }}>—</span>
                     )}
                   </td>
                 )
