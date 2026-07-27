@@ -67,6 +67,12 @@ export default function ApplicationForm() {
     e.preventDefault()
     if (!resumeFile) { setError('Please upload your resume.'); return }
     if (!coverFile) { setError('Please upload your cover letter.'); return }
+    // Validate required custom questions
+    const unanswered = questions.filter(q => q.required && !form.custom_responses[q.id])
+    if (unanswered.length > 0) {
+      setError(`Please answer all required questions: ${unanswered.map(q => q.question_text).join('; ')}`)
+      return
+    }
     setSubmitting(true)
     setError('')
 
@@ -299,20 +305,23 @@ export default function ApplicationForm() {
             {questions.length > 0 && (
               <FormSection title="Additional Questions">
                 {questions.sort((a, b) => a.display_order - b.display_order).map(q => (
-                  <FormField key={q.id} label={q.question_text}>
+                  <FormField key={q.id} label={q.question_text} required={q.required}>
                     {q.question_type === 'yes_no' ? (
-                      <select value={form.custom_responses[q.id] || ''} onChange={e => set('custom_responses', { ...form.custom_responses, [q.id]: e.target.value })} style={inputStyle}>
+                      <select value={form.custom_responses[q.id] || ''} onChange={e => set('custom_responses', { ...form.custom_responses, [q.id]: e.target.value })}
+                        required={q.required} style={inputStyle}>
                         <option value="">Select...</option>
                         <option value="yes">Yes</option>
                         <option value="no">No</option>
                       </select>
                     ) : q.question_type === 'multiple_choice' ? (
-                      <select value={form.custom_responses[q.id] || ''} onChange={e => set('custom_responses', { ...form.custom_responses, [q.id]: e.target.value })} style={inputStyle}>
+                      <select value={form.custom_responses[q.id] || ''} onChange={e => set('custom_responses', { ...form.custom_responses, [q.id]: e.target.value })}
+                        required={q.required} style={inputStyle}>
                         <option value="">Select...</option>
                         {(q.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
                     ) : (
                       <textarea value={form.custom_responses[q.id] || ''} onChange={e => set('custom_responses', { ...form.custom_responses, [q.id]: e.target.value })}
+                        required={q.required}
                         style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} />
                     )}
                   </FormField>

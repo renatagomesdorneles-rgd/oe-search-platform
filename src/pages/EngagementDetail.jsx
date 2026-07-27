@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import ProspectPool from './ProspectPool'
 import Scorecard from '../components/Scorecard'
 import AssessmentCriteriaManager from '../components/AssessmentCriteriaManager'
+import FormQuestionsManager from '../components/FormQuestionsManager'
 
 export default function EngagementDetail() {
   const { id } = useParams()
@@ -82,7 +83,7 @@ export default function EngagementDetail() {
           </button>
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 12, borderBottom: '1px solid #E2E8F0' }}>
-          {[['overview', 'Overview'], ['pipeline', 'Pipeline'], ['list', 'All Candidates'], ['prospects', 'Prospects'], ['criteria', 'Assessment Criteria'], ['workplan', 'Workplan']].map(([v, label]) => (
+          {[['overview', 'Overview'], ['pipeline', 'Pipeline'], ['list', 'All Candidates'], ['prospects', 'Prospects'], ['criteria', 'Assessment Criteria'], ['form', 'Form Settings'], ['workplan', 'Workplan']].map(([v, label]) => (
             <button key={v} onClick={() => setActiveView(v)} style={{
               padding: '6px 14px', fontSize: 13, fontWeight: activeView === v ? 600 : 400,
               color: activeView === v ? '#0D2B45' : '#718096', background: 'none', border: 'none',
@@ -155,6 +156,15 @@ export default function EngagementDetail() {
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D2B45', margin: '0 0 1rem' }}>Assessment Criteria</h2>
           <div style={{ maxWidth: 540 }}>
             <AssessmentCriteriaManager engagementId={id} />
+          </div>
+        </div>
+      )}
+
+      {activeView === 'form' && (
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D2B45', margin: '0 0 1rem' }}>Form Settings</h2>
+          <div style={{ maxWidth: 600 }}>
+            <FormQuestionsManager engagementId={id} />
           </div>
         </div>
       )}
