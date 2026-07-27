@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext'
 import ProspectPool from './ProspectPool'
 import Scorecard from '../components/Scorecard'
 import AssessmentCriteriaManager from '../components/AssessmentCriteriaManager'
-import CandidateComparison from '../components/CandidateComparison'
 
 export default function EngagementDetail() {
   const { id } = useParams()
@@ -18,7 +17,7 @@ export default function EngagementDetail() {
   const [selectedCandidate, setSelectedCandidate] = useState(null)
   const [showAddCandidate, setShowAddCandidate] = useState(false)
   const [showRejection, setShowRejection] = useState(null)
-  const [activeView, setActiveView] = useState('pipeline')
+  const [activeView, setActiveView] = useState('overview')
 
   useEffect(() => { fetchData() }, [id])
 
@@ -83,7 +82,7 @@ export default function EngagementDetail() {
           </button>
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 12, borderBottom: '1px solid #E2E8F0' }}>
-          {[['pipeline', 'Pipeline'], ['list', 'All Candidates'], ['comparison', 'Comparison'], ['prospects', 'Prospects'], ['criteria', 'Assessment Criteria'], ['workplan', 'Workplan']].map(([v, label]) => (
+          {[['overview', 'Overview'], ['pipeline', 'Pipeline'], ['list', 'All Candidates'], ['prospects', 'Prospects'], ['criteria', 'Assessment Criteria'], ['workplan', 'Workplan']].map(([v, label]) => (
             <button key={v} onClick={() => setActiveView(v)} style={{
               padding: '6px 14px', fontSize: 13, fontWeight: activeView === v ? 600 : 400,
               color: activeView === v ? '#0D2B45' : '#718096', background: 'none', border: 'none',
@@ -93,6 +92,12 @@ export default function EngagementDetail() {
           ))}
         </div>
       </div>
+
+      {activeView === 'overview' && (
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+          <EngagementOverview engagement={engagement} candidates={candidates} />
+        </div>
+      )}
 
       {activeView === 'pipeline' && (
         <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', padding: '1rem 1.5rem', display: 'flex', gap: 10 }}>
@@ -136,12 +141,6 @@ export default function EngagementDetail() {
       {activeView === 'list' && (
         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem' }}>
           <CandidateTable candidates={candidates} onOpen={setSelectedCandidate} />
-        </div>
-      )}
-
-      {activeView === 'comparison' && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem' }}>
-          <CandidateComparison engagementId={id} />
         </div>
       )}
 
@@ -546,6 +545,96 @@ function WorkplanView({ engagementId }) {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+function EngagementOverview({ engagement, candidates }) {
+  const active = candidates.filter(c => !c.not_proceeding)
+  const notProceeding = candidates.filter(c => c.not_proceeding)
+
+  const stageCounts = Object.entries(PIPELINE_STAGES).map(([num, stage]) => ({
+    num: parseInt(num),
+    label: stage.label,
+    count: active.filter(c => c.pipeline_stage === parseInt(num)).length,
+  })).filter(s => s.count > 0)
+
+  const inbound = candidates.filter(c => c.candidates?.entry_type === 'inbound_application').length
+  const fromOutreach = candidates.filter(c => c.candidates?.entry_type === 'converted_from_prospect').length
+
+  const rejectionCounts = {}
+  notProceeding.forEach(c => {
+    const r = c.not_proceeding_reason || 'other'
+    rejectionCounts[r] = (rejectionCounts[r] || 0) + 1
+  })
+
+  return (
+    <div style={{ maxWidth: 800 }}>
+      {/* Top stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+        {[
+          { label: 'Total Applicants', value: candidates.length, color: '#0D2B45' },
+          { label: 'Active in Pipeline', value: active.length, color: '#0B6E6E' },
+          { label: 'Not Proceeding', value: notProceeding.length, color: '#C53030' },
+          { label: 'Inbound Applications', value: inbound, color: '#553C9A' },
+        ].map(s => (
+          <div key={s.label} style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1rem 1.25rem' }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 12, color: '#718096', marginTop: 2 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pipeline breakdown */}
+      {stageCounts.length > 0 && (
+        <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.25rem', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B45', marginBottom: 14 }}>Active Candidates by Stage</div>
+          {stageCounts.map(s => (
+            <div key={s.num} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <div style={{ fontSize: 12, color: '#718096', width: 220, flexShrink: 0 }}>{s.label}</div>
+              <div style={{ flex: 1, height: 8, background: '#F0F4F8', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ width: `${(s.count / active.length) * 100}%`, height: '100%', background: '#0B6E6E', borderRadius: 4 }} />
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#0D2B45', width: 24, textAlign: 'right' }}>{s.count}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Source breakdown */}
+      {candidates.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+          <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.25rem' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B45', marginBottom: 12 }}>Application Source</div>
+            {[['Inbound Application', inbound], ['Converted from Outreach', fromOutreach]].map(([label, count]) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #F7FAFC', fontSize: 13 }}>
+                <span style={{ color: '#4A5568' }}>{label}</span>
+                <span style={{ fontWeight: 600, color: '#0D2B45' }}>{count}</span>
+              </div>
+            ))}
+          </div>
+
+          {notProceeding.length > 0 && (
+            <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.25rem' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B45', marginBottom: 12 }}>Not Proceeding — Reasons</div>
+              {Object.entries(rejectionCounts).map(([reason, count]) => (
+                <div key={reason} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #F7FAFC', fontSize: 13 }}>
+                  <span style={{ color: '#4A5568' }}>{REJECTION_REASONS[reason] || reason}</span>
+                  <span style={{ fontWeight: 600, color: '#C53030' }}>{count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {candidates.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#A0AEC0' }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+          <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>No candidates yet</div>
+          <div style={{ fontSize: 13 }}>Share the application form link or add candidates manually to get started.</div>
+        </div>
+      )}
     </div>
   )
 }

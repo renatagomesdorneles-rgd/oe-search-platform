@@ -84,7 +84,7 @@ export default function Dashboard() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#F7FAFC', borderBottom: '2px solid #E2E8F0' }}>
-              {['Engagement', 'Status', 'Candidates', 'Workplan', 'Conversion', 'Alerts', ''].map(h => (
+              {['Engagement', 'Status', 'Candidates', 'Workplan', 'Conversion', 'Alerts'].map(h => (
                 <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontSize: 12, fontWeight: 600, color: '#718096' }}>{h}</th>
               ))}
             </tr>
@@ -93,7 +93,11 @@ export default function Dashboard() {
             {engagements.map((eng, i) => (
               <tr key={eng.id} style={{ borderBottom: i < engagements.length - 1 ? '1px solid #F7FAFC' : 'none' }}>
                 <td style={{ padding: '12px 16px' }}>
-                  <div style={{ fontWeight: 600, color: '#0D2B45' }}>{eng.role_title}</div>
+                  <Link to={`/engagements/${eng.id}`} style={{ fontWeight: 600, color: '#0D2B45', textDecoration: 'none' }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#0B6E6E'}
+                    onMouseLeave={e => e.currentTarget.style.color = '#0D2B45'}>
+                    {eng.role_title}
+                  </Link>
                   <div style={{ fontSize: 12, color: '#718096' }}>{eng.client_name}</div>
                   {eng.target_close_date && (
                     <div style={{ fontSize: 11, color: '#A0AEC0', marginTop: 2 }}>Target close: {formatDate(eng.target_close_date)}</div>
@@ -127,9 +131,6 @@ export default function Dashboard() {
                   {eng.overdue > 0
                     ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#C53030' }}><AlertTriangle size={14} /> {eng.overdue} overdue</div>
                     : <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#A0AEC0' }}><CheckCircle size={14} /> Clear</div>}
-                </td>
-                <td style={{ padding: '12px 16px' }}>
-                  <Link to={`/engagements/${eng.id}`} style={{ fontSize: 12, color: '#0B6E6E', textDecoration: 'none', fontWeight: 500 }}>Open →</Link>
                 </td>
               </tr>
             ))}
