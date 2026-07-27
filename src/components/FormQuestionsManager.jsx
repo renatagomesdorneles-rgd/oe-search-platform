@@ -38,7 +38,7 @@ export default function FormQuestionsManager({ engagementId }) {
         ? newQ.options.filter(o => o.trim())
         : null
 
-    await supabase.from('engagement_form_questions').insert({
+    const { error } = await supabase.from('engagement_form_questions').insert({
       engagement_id: engagementId,
       question_text: newQ.question_text.trim(),
       question_type: newQ.question_type,
@@ -46,10 +46,15 @@ export default function FormQuestionsManager({ engagementId }) {
       required: newQ.required,
       display_order: questions.length,
     })
+    if (error) {
+      alert(`Failed to save question: ${error.message}`)
+      setSaving(false)
+      return
+    }
     setNewQ({ question_text: '', question_type: 'yes_no', options: ['', ''], required: true })
     setShowAdd(false)
     setSaving(false)
-    fetchQuestions()
+    await fetchQuestions()
   }
 
   async function deleteQuestion(id) {
