@@ -578,6 +578,17 @@ function WorkplanView({ engagementId }) {
 }
 
 function EngagementOverview({ engagement, candidates }) {
+  const [editingJD, setEditingJD] = useState(false)
+  const [jdText, setJdText] = useState(engagement.job_posting_text || '')
+  const [savingJD, setSavingJD] = useState(false)
+
+  async function saveJD() {
+    setSavingJD(true)
+    await supabase.from('engagements').update({ job_posting_text: jdText }).eq('id', engagement.id)
+    setSavingJD(false)
+    setEditingJD(false)
+  }
+
   const active = candidates.filter(c => !c.not_proceeding)
   const notProceeding = candidates.filter(c => c.not_proceeding)
 
@@ -598,6 +609,38 @@ function EngagementOverview({ engagement, candidates }) {
 
   return (
     <div style={{ maxWidth: 800 }}>
+      {/* Job Description */}
+      <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.25rem', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: editingJD ? 12 : (jdText ? 12 : 0) }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#0D2B45' }}>Job Description</div>
+          {!editingJD && (
+            <button onClick={() => setEditingJD(true)}
+              style={{ fontSize: 12, color: '#0B6E6E', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+              {jdText ? 'Edit' : '+ Add job description'}
+            </button>
+          )}
+        </div>
+        {editingJD ? (
+          <div>
+            <textarea value={jdText} onChange={e => setJdText(e.target.value)}
+              placeholder="Paste or type the job description here. This will appear on the public jobs page."
+              style={{ width: '100%', minHeight: 200, padding: '10px 12px', border: '1px solid #CBD5E0', borderRadius: 8, fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.6 }} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <button onClick={() => { setEditingJD(false); setJdText(engagement.job_posting_text || '') }}
+                style={{ padding: '7px 16px', border: '1px solid #CBD5E0', background: '#fff', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={saveJD} disabled={savingJD}
+                style={{ padding: '7px 16px', background: '#0D2B45', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                {savingJD ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        ) : jdText ? (
+          <div style={{ fontSize: 13, color: '#4A5568', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{jdText}</div>
+        ) : (
+          <div style={{ fontSize: 13, color: '#A0AEC0' }}>No job description yet. Add one to display this role on the public jobs page.</div>
+        )}
+      </div>
+
       {/* Top stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         {[
