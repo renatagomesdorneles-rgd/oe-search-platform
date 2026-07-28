@@ -10,6 +10,7 @@ import Metrics from './pages/Metrics'
 import Settings from './pages/Settings'
 import GreenhouseImporter from './pages/GreenhouseImporter'
 import { Candidates } from './pages/Placeholders'
+import JobsPage from './pages/JobsPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/engagements" element={<ProtectedRoute><Engagements /></ProtectedRoute>} />
           <Route path="/engagements/:id" element={<ProtectedRoute><EngagementDetail /></ProtectedRoute>} />
           <Route path="/candidates" element={<ProtectedRoute><Candidates /></ProtectedRoute>} />
+          <Route path="/jobs" element={<JobsPage />} />
           <Route path="/metrics" element={<ProtectedRoute><Metrics /></ProtectedRoute>} />
           <Route path="/import" element={<ProtectedRoute><GreenhouseImporter /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

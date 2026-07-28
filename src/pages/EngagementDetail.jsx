@@ -20,6 +20,8 @@ export default function EngagementDetail() {
   const [showRejection, setShowRejection] = useState(null)
   const [activeView, setActiveView] = useState('overview')
 
+  const [published, setPublished] = useState(false)
+
   useEffect(() => { fetchData() }, [id])
 
   async function fetchData() {
@@ -28,8 +30,15 @@ export default function EngagementDetail() {
       supabase.from('candidate_engagements').select('*, candidates(*)').eq('engagement_id', id).order('created_at', { ascending: false })
     ])
     setEngagement(engRes.data)
+    setPublished(engRes.data?.published || false)
     setCandidates(candRes.data || [])
     setLoading(false)
+  }
+
+  async function togglePublished() {
+    const newVal = !published
+    setPublished(newVal)
+    await supabase.from('engagements').update({ published: newVal }).eq('id', id)
   }
 
   async function moveStage(ceId, newStage) {
@@ -77,10 +86,16 @@ export default function EngagementDetail() {
               </a>
             )}
           </div>
-          <button onClick={() => setShowAddCandidate(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0D2B45', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            <Plus size={15} /> Add Candidate
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={togglePublished}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: published ? '#E6FFFA' : '#F7FAFC', color: published ? '#0B6E6E' : '#718096', border: `1px solid ${published ? '#0B6E6E' : '#CBD5E0'}`, borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              {published ? '● Published' : '○ Unpublished'}
+            </button>
+            <button onClick={() => setShowAddCandidate(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0D2B45', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              <Plus size={15} /> Add Candidate
+            </button>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 12, borderBottom: '1px solid #E2E8F0' }}>
           {[['overview', 'Overview'], ['pipeline', 'Pipeline'], ['list', 'All Candidates'], ['prospects', 'Prospects'], ['criteria', 'Assessment Criteria'], ['form', 'Form Settings'], ['workplan', 'Workplan']].map(([v, label]) => (
