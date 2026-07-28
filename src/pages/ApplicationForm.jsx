@@ -249,25 +249,17 @@ export default function ApplicationForm() {
 
             <FormSection title="Personal Information">
               <FormField label="Full Name" required>
-                <input value={form.full_name} onChange={e => set('full_name', e.target.value)} required placeholder="Jane Smith" style={inputStyle} />
+                <input value={form.full_name} onChange={e => set('full_name', e.target.value)} required style={inputStyle} />
               </FormField>
               <FormField label="Email Address" required>
-                <input type="email" value={form.email} onChange={e => set('email', e.target.value)} required placeholder="jane@example.com" style={inputStyle} />
+                <input type="email" value={form.email} onChange={e => set('email', e.target.value)} required style={inputStyle} />
               </FormField>
               <TwoCol>
-                <FormField label="Current Title">
-                  <input value={form.current_title} onChange={e => set('current_title', e.target.value)} placeholder="Director of Programs" style={inputStyle} />
-                </FormField>
-                <FormField label="Current Organization">
-                  <input value={form.current_organization} onChange={e => set('current_organization', e.target.value)} placeholder="Organization name" style={inputStyle} />
-                </FormField>
-              </TwoCol>
-              <TwoCol>
                 <FormField label="Zip Code">
-                  <input value={form.zip_code} onChange={e => set('zip_code', e.target.value)} placeholder="10001" style={inputStyle} />
+                  <input value={form.zip_code} onChange={e => set('zip_code', e.target.value)} style={inputStyle} />
                 </FormField>
                 <FormField label="LinkedIn URL">
-                  <input value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} placeholder="linkedin.com/in/..." style={inputStyle} />
+                  <input value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} />
                 </FormField>
               </TwoCol>
             </FormSection>
