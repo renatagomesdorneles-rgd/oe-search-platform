@@ -162,9 +162,12 @@ export default function EngagementDetail() {
 
       {activeView === 'form' && (
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D2B45', margin: '0 0 1rem' }}>Form Settings</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D2B45', margin: '0 0 1.5rem' }}>Form Settings</h2>
           <div style={{ maxWidth: 600 }}>
             <FormQuestionsManager engagementId={id} />
+            <div style={{ marginTop: 32 }}>
+              <SourceLinkGenerator slug={engagement.application_form_slug} />
+            </div>
           </div>
         </div>
       )}
@@ -343,7 +346,7 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject }) {
                 <Row label="LinkedIn" value={ce.candidates?.linkedin_url ? <a href={ce.candidates.linkedin_url} target="_blank" rel="noreferrer" style={{ color: '#2B6CB0' }}>View Profile</a> : '—'} />
                 <Row label="Location (Zip)" value={ce.candidates?.zip_code || '—'} />
                 <Row label="Applied" value={formatDate(ce.candidates?.date_applied)} />
-                <Row label="Source" value={ce.candidates?.entry_type === 'converted_from_prospect' ? 'Converted from prospect' : 'Inbound application'} />
+                <Row label="Source" value={ce.candidates?.entry_type === 'converted_from_prospect' ? 'Converted from prospect' : ce.application_source || 'Inbound application'} />
               </Section>
 
               {(ce.candidates?.resume_url || ce.candidates?.cover_letter_url) && (
@@ -644,6 +647,75 @@ function EngagementOverview({ engagement, candidates }) {
           <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>No candidates yet</div>
           <div style={{ fontSize: 13 }}>Share the application form link or add candidates manually to get started.</div>
         </div>
+      )}
+    </div>
+  )
+}
+
+const PRESET_SOURCES = [
+  { label: "OE's Website", value: 'oe-website' },
+  { label: 'LinkedIn', value: 'linkedin' },
+  { label: 'Outreach Message', value: 'outreach' },
+  { label: 'Idealist', value: 'idealist' },
+  { label: 'Indeed', value: 'indeed' },
+]
+
+function SourceLinkGenerator({ slug }) {
+  const [selected, setSelected] = useState('')
+  const [custom, setCustom] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const source = selected === 'custom' ? custom.trim() : selected
+  const baseUrl = `${window.location.origin}/apply/${slug}`
+  const fullUrl = source ? `${baseUrl}?source=${encodeURIComponent(source)}` : baseUrl
+
+  function copyLink() {
+    navigator.clipboard.writeText(fullUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#A0AEC0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Tracked Application Links</div>
+      <div style={{ fontSize: 13, color: '#718096', marginBottom: 16, lineHeight: 1.6 }}>
+        Generate a unique link for each place you post the role. When candidates apply through that link, the source is automatically recorded on their application.
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#4A5568', marginBottom: 8 }}>Select a source</label>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+          {PRESET_SOURCES.map(s => (
+            <button key={s.value} onClick={() => { setSelected(s.value); setCustom('') }}
+              style={{ padding: '6px 14px', fontSize: 12, fontWeight: 500, borderRadius: 20, border: '1px solid', cursor: 'pointer',
+                borderColor: selected === s.value ? '#0B6E6E' : '#E2E8F0',
+                background: selected === s.value ? '#E6FFFA' : '#fff',
+                color: selected === s.value ? '#0B6E6E' : '#4A5568' }}>
+              {s.label}
+            </button>
+          ))}
+          <button onClick={() => setSelected('custom')}
+            style={{ padding: '6px 14px', fontSize: 12, fontWeight: 500, borderRadius: 20, border: '1px solid', cursor: 'pointer',
+              borderColor: selected === 'custom' ? '#0B6E6E' : '#E2E8F0',
+              background: selected === 'custom' ? '#E6FFFA' : '#fff',
+              color: selected === 'custom' ? '#0B6E6E' : '#4A5568' }}>
+            + Custom
+          </button>
+        </div>
+        {selected === 'custom' && (
+          <input value={custom} onChange={e => setCustom(e.target.value)}
+            placeholder="e.g. alumni-newsletter, board-referral"
+            style={{ width: '100%', padding: '9px 12px', border: '1px solid #CBD5E0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+        )}
+      </div>
+      <div style={{ background: '#F7FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        <code style={{ flex: 1, fontSize: 12, color: '#4A5568', wordBreak: 'break-all' }}>{fullUrl}</code>
+        <button onClick={copyLink}
+          style={{ flexShrink: 0, padding: '6px 14px', fontSize: 12, fontWeight: 600, background: copied ? '#276749' : '#0D2B45', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+          {copied ? '✓ Copied' : 'Copy'}
+        </button>
+      </div>
+      {!source && (
+        <div style={{ fontSize: 11, color: '#A0AEC0' }}>Select a source above to generate a tracked link, or copy the base URL to use without tracking.</div>
       )}
     </div>
   )

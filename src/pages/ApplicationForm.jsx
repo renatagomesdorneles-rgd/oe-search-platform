@@ -33,6 +33,9 @@ export default function ApplicationForm() {
   const [resumeFile, setResumeFile] = useState(null)
   const [coverFile, setCoverFile] = useState(null)
 
+  // Read source from URL query param (?source=linkedin etc.)
+  const applicationSource = new URLSearchParams(window.location.search).get('source') || null
+
   useEffect(() => { fetchEngagement() }, [slug])
 
   async function fetchEngagement() {
@@ -173,6 +176,7 @@ export default function ApplicationForm() {
           compensation_expectations: form.compensation || null,
           custom_question_responses: Object.keys(form.custom_responses).length ? form.custom_responses : null,
           acknowledgment_email_sent: false,
+          application_source: applicationSource,
         })
       if (ceErr) throw ceErr
 
