@@ -366,8 +366,8 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject }) {
 
               {(ce.candidates?.resume_url || ce.candidates?.cover_letter_url) && (
                 <Section title="Documents">
-                  {ce.candidates?.resume_url && <Row label="Resume" value={<a href={`https://xxxgutfteftimhhmefoi.supabase.co/storage/v1/object/public/documents/${ce.candidates.resume_url}`} target="_blank" rel="noreferrer" style={{ color: '#2B6CB0' }}>Download</a>} />}
-                  {ce.candidates?.cover_letter_url && <Row label="Cover Letter" value={<a href={`https://xxxgutfteftimhhmefoi.supabase.co/storage/v1/object/public/documents/${ce.candidates.cover_letter_url}`} target="_blank" rel="noreferrer" style={{ color: '#2B6CB0' }}>Download</a>} />}
+                  {ce.candidates?.resume_url && <DocumentLink path={ce.candidates.resume_url} label="Resume" />}
+                  {ce.candidates?.cover_letter_url && <DocumentLink path={ce.candidates.cover_letter_url} label="Cover Letter" />}
                 </Section>
               )}
 
@@ -408,6 +408,30 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function DocumentLink({ path, label }) {
+  const [url, setUrl] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  async function getSignedUrl() {
+    setLoading(true)
+    const { data } = await supabase.storage.from('documents').createSignedUrl(path, 60 * 60)
+    if (data?.signedUrl) {
+      setUrl(data.signedUrl)
+      window.open(data.signedUrl, '_blank')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <Row label={label} value={
+      <button onClick={getSignedUrl} disabled={loading}
+        style={{ background: 'none', border: 'none', color: '#2B6CB0', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, padding: 0, fontWeight: 500 }}>
+        {loading ? 'Opening...' : 'Download'}
+      </button>
+    } />
   )
 }
 
