@@ -259,8 +259,8 @@ export default function ApplicationForm() {
                 <input type="email" value={form.email} onChange={e => set('email', e.target.value)} required style={inputStyle} />
               </FormField>
               <TwoCol>
-                <FormField label="Zip Code">
-                  <input value={form.zip_code} onChange={e => set('zip_code', e.target.value)} style={inputStyle} />
+                <FormField label="Zip Code" required>
+                  <input value={form.zip_code} onChange={e => set('zip_code', e.target.value)} required style={inputStyle} />
                 </FormField>
                 <FormField label="LinkedIn URL">
                   <input value={form.linkedin_url} onChange={e => set('linkedin_url', e.target.value)} style={inputStyle} />
@@ -326,9 +326,6 @@ export default function ApplicationForm() {
             )}
 
             <FormSection title="Voluntary Demographics">
-              <p style={{ fontSize: 12, color: '#718096', marginBottom: 16, lineHeight: 1.6 }}>
-                OE Consulting is committed to building diverse candidate slates. The following information is entirely optional and will never be used in selection decisions. It is collected solely for internal equity tracking.
-              </p>
               <FormField label="Gender Identity (optional)">
                 <select value={form.gender} onChange={e => set('gender', e.target.value)} style={inputStyle}>
                   <option value="">Prefer not to say</option>
