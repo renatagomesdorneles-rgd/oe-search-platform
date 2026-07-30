@@ -58,6 +58,37 @@ export default function ApplicationForm() {
     race: f.race.includes(val) ? f.race.filter(r => r !== val) : [...f.race, val]
   }))
 
+  async function sendAcknowledgmentEmail(candidateName, candidateEmail, roleTitle, clientName) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: 'OE Consulting <onboarding@resend.dev>',
+          to: [candidateEmail],
+          subject: `Application received — ${roleTitle}`,
+          html: `
+            <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a;">
+              <p>Dear ${candidateName},</p>
+              <p>Thank you for applying for the <strong>${roleTitle}</strong> position${clientName ? ` at ${clientName}` : ''}. We have received your application and will be in touch as the search progresses.</p>
+              <p>We appreciate your interest in this opportunity.</p>
+              <br/>
+              <p>Warm regards,</p>
+              <p><strong>OE Consulting</strong></p>
+            </div>
+          `,
+        }),
+      })
+      return response.ok
+    } catch (err) {
+      console.error('Acknowledgment email failed:', err)
+      return false
+    }
+  }
+
   async function uploadFile(file, folder) {
     const ext = file.name.split('.').pop()
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
@@ -179,6 +210,20 @@ export default function ApplicationForm() {
           application_source: applicationSource,
         })
       if (ceErr) throw ceErr
+
+      // Send acknowledgment email
+      const emailSent = await sendAcknowledgmentEmail(
+        form.full_name,
+        form.email,
+        engagement.role_title,
+        engagement.client_name
+      )
+      if (emailSent) {
+        await supabase.from('candidate_engagements')
+          .update({ acknowledgment_email_sent: true, acknowledgment_email_sent_at: new Date().toISOString() })
+          .eq('candidate_id', candidateId)
+          .eq('engagement_id', engagement.id)
+      }
 
       setSubmitted(true)
     } catch (err) {
