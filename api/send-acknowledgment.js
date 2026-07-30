@@ -9,6 +9,43 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
 
+  // Default template
+  let subject = `Application received — ${roleTitle}`
+  let bodyTemplate = `Dear [CANDIDATE NAME],
+
+Thank you for applying for the [ROLE TITLE] position at [CLIENT NAME]. We have received your application and will be in touch as the search progresses.
+
+We appreciate your interest in this opportunity.
+
+Warm regards,
+OE Consulting`
+
+  // Try to load custom template from Supabase storage
+  try {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
+    const templateRes = await fetch(
+      `${supabaseUrl}/storage/v1/object/authenticated/documents/templates/acknowledgment_template.json`,
+      { headers: { 'Authorization': `Bearer ${supabaseKey}` } }
+    )
+    if (templateRes.ok) {
+      const tmpl = await templateRes.json()
+      if (tmpl.subject) subject = tmpl.subject
+      if (tmpl.body) bodyTemplate = tmpl.body
+    }
+  } catch (e) {
+    // Use defaults if template fetch fails
+  }
+
+  // Replace placeholders
+  const replacePlaceholders = (str) => str
+    .replace(/\[CANDIDATE NAME\]/g, candidateName)
+    .replace(/\[ROLE TITLE\]/g, roleTitle || '')
+    .replace(/\[CLIENT NAME\]/g, clientName || '')
+
+  const finalSubject = replacePlaceholders(subject)
+  const finalBody = replacePlaceholders(bodyTemplate)
+
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -19,26 +56,15 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: 'OE Consulting <onboarding@resend.dev>',
         to: [candidateEmail],
-        subject: `Application received — ${roleTitle}`,
-        html: `
-          <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a;">
-            <p>Dear ${candidateName},</p>
-            <p>Thank you for applying for the <strong>${roleTitle}</strong> position${clientName ? ` at ${clientName}` : ''}. We have received your application and will be in touch as the search progresses.</p>
-            <p>We appreciate your interest in this opportunity.</p>
-            <br/>
-            <p>Warm regards,</p>
-            <p><strong>OE Consulting</strong></p>
-          </div>
-        `,
+        subject: finalSubject,
+        html: `<div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a; white-space: pre-wrap;">${finalBody}</div>`,
       }),
     })
 
     const data = await response.json()
-
     if (!response.ok) {
       return res.status(500).json({ error: data.message || 'Failed to send email' })
     }
-
     return res.status(200).json({ success: true })
   } catch (err) {
     return res.status(500).json({ error: err.message })

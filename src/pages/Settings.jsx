@@ -82,6 +82,19 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('templates')
   const [templates, setTemplates] = useState(DEFAULT_TEMPLATES)
   const [selectedTemplate, setSelectedTemplate] = useState('does_not_meet_qualifications')
+  const [ackTemplate, setAckTemplate] = useState({
+    subject: 'Application received — [ROLE TITLE]',
+    body: `Dear [CANDIDATE NAME],
+
+Thank you for applying for the [ROLE TITLE] position at [CLIENT NAME]. We have received your application and will be in touch as the search progresses.
+
+We appreciate your interest in this opportunity.
+
+Warm regards,
+OE Consulting`
+  })
+  const [savingAck, setSavingAck] = useState(false)
+  const [savedAck, setSavedAck] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [users, setUsers] = useState([])
@@ -93,13 +106,25 @@ export default function Settings() {
   }, [activeTab])
 
   async function loadTemplates() {
-    const { data } = await supabase.from('profiles').select('id').eq('id', profile?.id).single()
-    // Load saved templates from Supabase if they exist
-    const { data: saved } = await supabase.storage.from('documents').download('templates/rejection_templates.json').catch(() => ({ data: null }))
-    if (saved) {
-      const text = await saved.text()
+    const { data: rejData } = await supabase.storage.from('documents').download('templates/rejection_templates.json').catch(() => ({ data: null }))
+    if (rejData) {
+      const text = await rejData.text()
       try { setTemplates(JSON.parse(text)) } catch (e) { /* use defaults */ }
     }
+    const { data: ackData } = await supabase.storage.from('documents').download('templates/acknowledgment_template.json').catch(() => ({ data: null }))
+    if (ackData) {
+      const text = await ackData.text()
+      try { setAckTemplate(JSON.parse(text)) } catch (e) { /* use defaults */ }
+    }
+  }
+
+  async function saveAckTemplate() {
+    setSavingAck(true)
+    const blob = new Blob([JSON.stringify(ackTemplate)], { type: 'application/json' })
+    await supabase.storage.from('documents').upload('templates/acknowledgment_template.json', blob, { upsert: true })
+    setSavingAck(false)
+    setSavedAck(true)
+    setTimeout(() => setSavedAck(false), 2000)
   }
 
   async function saveTemplates() {
@@ -131,7 +156,7 @@ export default function Settings() {
       </div>
 
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #E2E8F0', marginBottom: '1.5rem' }}>
-        {[['templates', 'Email Templates'], ['users', 'Team Members'], ['account', 'Account']].map(([tab, label]) => (
+        {[['templates', 'Rejection Templates'], ['acknowledgment', 'Acknowledgment Email'], ['users', 'Team Members'], ['account', 'Account']].map(([tab, label]) => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{
             padding: '8px 20px', fontSize: 14, fontWeight: activeTab === tab ? 600 : 400,
             color: activeTab === tab ? '#0D2B45' : '#718096', background: 'none', border: 'none',
@@ -183,6 +208,33 @@ export default function Settings() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'acknowledgment' && (
+        <div style={{ maxWidth: 640 }}>
+          <div style={{ fontSize: 13, color: '#718096', marginBottom: 16, lineHeight: 1.6 }}>
+            This email is sent automatically to every candidate when they submit an application. Use <code style={{ background: '#F7FAFC', padding: '1px 5px', borderRadius: 4, fontSize: 12 }}>[CANDIDATE NAME]</code>, <code style={{ background: '#F7FAFC', padding: '1px 5px', borderRadius: 4, fontSize: 12 }}>[ROLE TITLE]</code>, and <code style={{ background: '#F7FAFC', padding: '1px 5px', borderRadius: 4, fontSize: 12 }}>[CLIENT NAME]</code> as placeholders.
+          </div>
+          <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#0D2B45' }}>Acknowledgment Email</div>
+              <button onClick={saveAckTemplate} disabled={savingAck}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: savedAck ? '#276749' : '#0D2B45', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                <Save size={14} /> {savedAck ? 'Saved!' : savingAck ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#4A5568', marginBottom: 6 }}>Subject</label>
+              <input value={ackTemplate.subject} onChange={e => setAckTemplate(t => ({ ...t, subject: e.target.value }))}
+                style={{ width: '100%', padding: '9px 12px', border: '1px solid #CBD5E0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#4A5568', marginBottom: 6 }}>Body</label>
+              <textarea value={ackTemplate.body} onChange={e => setAckTemplate(t => ({ ...t, body: e.target.value }))}
+                style={{ width: '100%', minHeight: 240, padding: '10px 12px', border: '1px solid #CBD5E0', borderRadius: 8, fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.6 }} />
+            </div>
+          </div>
         </div>
       )}
 
