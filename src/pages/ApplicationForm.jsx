@@ -60,27 +60,10 @@ export default function ApplicationForm() {
 
   async function sendAcknowledgmentEmail(candidateName, candidateEmail, roleTitle, clientName) {
     try {
-      const response = await fetch('https://api.resend.com/emails', {
+      const response = await fetch('/api/send-acknowledgment', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: 'OE Consulting <onboarding@resend.dev>',
-          to: [candidateEmail],
-          subject: `Application received — ${roleTitle}`,
-          html: `
-            <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a;">
-              <p>Dear ${candidateName},</p>
-              <p>Thank you for applying for the <strong>${roleTitle}</strong> position${clientName ? ` at ${clientName}` : ''}. We have received your application and will be in touch as the search progresses.</p>
-              <p>We appreciate your interest in this opportunity.</p>
-              <br/>
-              <p>Warm regards,</p>
-              <p><strong>OE Consulting</strong></p>
-            </div>
-          `,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateName, candidateEmail, roleTitle, clientName }),
       })
       return response.ok
     } catch (err) {
