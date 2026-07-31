@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+// Load Quill styles so rich text renders correctly
+const quillStyle = document.createElement('link')
+quillStyle.rel = 'stylesheet'
+quillStyle.href = 'https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css'
+document.head.appendChild(quillStyle)
+
 export default function JobsPage() {
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +44,7 @@ export default function JobsPage() {
                 {job.client_name}{job.location && ` · ${job.location}`}
               </div>
               {job.job_posting_text && (
-                <div style={{ fontSize: 14, color: '#4A5568', lineHeight: 1.7, marginBottom: 20 }}
+                <div className="ql-editor" style={{ fontSize: 14, color: '#4A5568', lineHeight: 1.7, marginBottom: 20, padding: 0 }}
                   dangerouslySetInnerHTML={{ __html: job.job_posting_text }} />
               )}
               {job.application_form_slug && (

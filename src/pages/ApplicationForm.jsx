@@ -267,12 +267,7 @@ export default function ApplicationForm() {
         </div>
 
         {/* Job posting */}
-        {engagement.job_posting_text && (
-          <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: '#0D2B45', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>About the Role</h2>
-            <div style={{ fontSize: 14, color: '#4A5568', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{engagement.job_posting_text}</div>
-          </div>
-        )}
+        {/* Job description removed - shown on jobs page instead */}
 
         {/* Form */}
         <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.5rem' }}>
