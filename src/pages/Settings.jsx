@@ -269,9 +269,9 @@ OE Consulting`
 
       {activeTab === 'account' && (
         <div style={{ maxWidth: 480 }}>
-          <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.5rem' }}>
+          <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.5rem', marginBottom: 20 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#0D2B45', marginBottom: '1.25rem' }}>Your Profile</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: '1.5rem', padding: '1rem', background: '#F7FAFC', borderRadius: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '1rem', background: '#F7FAFC', borderRadius: 8 }}>
               <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#0B6E6E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff' }}>
                 {profile?.full_name?.[0]?.toUpperCase() || '?'}
               </div>
@@ -280,12 +280,79 @@ OE Consulting`
                 <div style={{ fontSize: 13, color: '#718096' }}>{profile?.email}</div>
               </div>
             </div>
-            <div style={{ fontSize: 13, color: '#718096', lineHeight: 1.6 }}>
-              To update your name or password, go to your Supabase project → Authentication → Users → find your email → edit.
-            </div>
           </div>
+
+          <ChangePasswordForm />
         </div>
       )}
+    </div>
+  )
+}
+
+function ChangePasswordForm() {
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    setSuccess(false)
+
+    if (newPassword.length < 8) {
+      setError('New password must be at least 8 characters.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match.')
+      return
+    }
+
+    setSaving(true)
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+    if (updateError) {
+      setError(updateError.message)
+    } else {
+      setSuccess(true)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    }
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '1.5rem' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#0D2B45', marginBottom: '1.25rem' }}>Change Password</div>
+      <form onSubmit={handleSubmit}>
+        {[
+          ['New Password', newPassword, setNewPassword],
+          ['Confirm New Password', confirmPassword, setConfirmPassword],
+        ].map(([label, value, setter]) => (
+          <div key={label} style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#4A5568', marginBottom: 6 }}>{label}</label>
+            <input type="password" value={value} onChange={e => setter(e.target.value)} required minLength={8}
+              style={{ width: '100%', padding: '9px 12px', border: '1px solid #CBD5E0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+          </div>
+        ))}
+        {error && (
+          <div style={{ background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#C53030', marginBottom: 14 }}>
+            {error}
+          </div>
+        )}
+        {success && (
+          <div style={{ background: '#F0FFF4', border: '1px solid #9AE6B4', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#276749', marginBottom: 14 }}>
+            Password updated successfully.
+          </div>
+        )}
+        <button type="submit" disabled={saving}
+          style={{ padding: '9px 20px', background: saving ? '#A0AEC0' : '#0D2B45', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
+          {saving ? 'Updating...' : 'Update Password'}
+        </button>
+      </form>
     </div>
   )
 }
