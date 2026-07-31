@@ -38,9 +38,8 @@ export default function JobsPage() {
                 {job.client_name}{job.location && ` · ${job.location}`}
               </div>
               {job.job_posting_text && (
-                <div style={{ fontSize: 14, color: '#4A5568', lineHeight: 1.7, whiteSpace: 'pre-wrap', marginBottom: 20 }}>
-                  {job.job_posting_text}
-                </div>
+                <div style={{ fontSize: 14, color: '#4A5568', lineHeight: 1.7, marginBottom: 20 }}
+                  dangerouslySetInnerHTML={{ __html: job.job_posting_text }} />
               )}
               {job.application_form_slug && (
                 <a href={`/apply/${job.application_form_slug}?source=oe-website`}

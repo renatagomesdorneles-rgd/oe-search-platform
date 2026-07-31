@@ -8,6 +8,7 @@ import ProspectPool from './ProspectPool'
 import Scorecard from '../components/Scorecard'
 import AssessmentCriteriaManager from '../components/AssessmentCriteriaManager'
 import FormQuestionsManager from '../components/FormQuestionsManager'
+import RichTextEditor from '../components/RichTextEditor'
 
 export default function EngagementDetail() {
   const { id } = useParams()
@@ -646,9 +647,11 @@ function EngagementOverview({ engagement, candidates }) {
         </div>
         {editingJD ? (
           <div>
-            <textarea value={jdText} onChange={e => setJdText(e.target.value)}
+            <RichTextEditor
+              value={jdText}
+              onChange={setJdText}
               placeholder="Paste or type the job description here. This will appear on the public jobs page."
-              style={{ width: '100%', minHeight: 200, padding: '10px 12px', border: '1px solid #CBD5E0', borderRadius: 8, fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.6 }} />
+            />
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
               <button onClick={() => { setEditingJD(false); setJdText(engagement.job_posting_text || '') }}
                 style={{ padding: '7px 16px', border: '1px solid #CBD5E0', background: '#fff', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
@@ -659,7 +662,7 @@ function EngagementOverview({ engagement, candidates }) {
             </div>
           </div>
         ) : jdText ? (
-          <div style={{ fontSize: 13, color: '#4A5568', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{jdText}</div>
+          <div style={{ fontSize: 14, color: '#4A5568', lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: jdText }} />
         ) : (
           <div style={{ fontSize: 13, color: '#A0AEC0' }}>No job description yet. Add one to display this role on the public jobs page.</div>
         )}
