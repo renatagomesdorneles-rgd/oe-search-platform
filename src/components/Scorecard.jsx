@@ -3,10 +3,11 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
 const RATINGS = [
-  { value: 'strong',      label: 'Strong',        color: '#276749', bg: '#F0FFF4', border: '#9AE6B4' },
-  { value: 'weak',        label: 'Weak',          color: '#9B2C2C', bg: '#FFF5F5', border: '#FEB2B2' },
-  { value: 'follow_up',  label: 'Needs Follow-Up', color: '#B7791F', bg: '#FFFBEB', border: '#F6E05E' },
-  { value: 'not_assessed', label: 'Not Assessed', color: '#718096', bg: '#F7FAFC', border: '#CBD5E0' },
+  { value: 'exceeds',        label: 'Exceeds Expectations',  color: '#276749', bg: '#F0FFF4', border: '#9AE6B4' },
+  { value: 'meets',          label: 'Meets Expectations',    color: '#2B6CB0', bg: '#EBF8FF', border: '#BEE3F8' },
+  { value: 'partially_meets', label: 'Partially Meets',      color: '#B7791F', bg: '#FFFBEB', border: '#F6E05E' },
+  { value: 'does_not_meet',  label: 'Does Not Meet',         color: '#9B2C2C', bg: '#FFF5F5', border: '#FEB2B2' },
+  { value: 'not_assessed',   label: 'Not Assessed',          color: '#718096', bg: '#F7FAFC', border: '#CBD5E0' },
 ]
 
 const OVERALL_RATINGS = [
@@ -92,13 +93,13 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
         return (
           <div key={criterion.id} style={{ marginBottom: 14, padding: 14, background: '#F7FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#0D2B45', marginBottom: 10 }}>{criterion.name}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
               {RATINGS.map(r => {
                 const selected = score?.rating === r.value
                 return (
                   <button key={r.value} onClick={() => setScore(criterion.id, 'rating', selected ? null : r.value)}
                     style={{
-                      padding: '7px 10px', borderRadius: 6, border: `1px solid ${selected ? r.border : '#E2E8F0'}`,
+                      padding: '8px 12px', borderRadius: 6, border: `1px solid ${selected ? r.border : '#E2E8F0'}`,
                       background: selected ? r.bg : '#fff', color: selected ? r.color : '#718096',
                       fontSize: 12, fontWeight: selected ? 700 : 400, cursor: 'pointer',
                       textAlign: 'left', transition: 'all 0.1s',
@@ -109,8 +110,8 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
               })}
             </div>
             <textarea value={score?.narrative || ''} onChange={e => setScore(criterion.id, 'narrative', e.target.value)}
-              placeholder="Notes (optional)..."
-              style={{ width: '100%', minHeight: 56, padding: '8px 10px', border: '1px solid #CBD5E0', borderRadius: 6, fontSize: 12, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: '#4A5568' }} />
+              placeholder="Notes — paste interview transcript excerpts or observations here..."
+              style={{ width: '100%', minHeight: 120, padding: '8px 10px', border: '1px solid #CBD5E0', borderRadius: 6, fontSize: 12, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: '#4A5568', lineHeight: 1.6 }} />
           </div>
         )
       })}

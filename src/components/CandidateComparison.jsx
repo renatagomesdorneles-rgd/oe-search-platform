@@ -38,10 +38,11 @@ export default function CandidateComparison({ engagementId }) {
   }
 
   const RATING_DISPLAY = {
-    strong:       { label: 'Strong',           color: '#276749', bg: '#F0FFF4' },
-    weak:         { label: 'Weak',             color: '#9B2C2C', bg: '#FFF5F5' },
-    follow_up:    { label: 'Needs Follow-Up',  color: '#B7791F', bg: '#FFFBEB' },
-    not_assessed: { label: 'Not Assessed',     color: '#718096', bg: '#F7FAFC' },
+    exceeds:        { label: 'Exceeds Expectations', color: '#276749', bg: '#F0FFF4' },
+    meets:          { label: 'Meets Expectations',   color: '#2B6CB0', bg: '#EBF8FF' },
+    partially_meets:{ label: 'Partially Meets',      color: '#B7791F', bg: '#FFFBEB' },
+    does_not_meet:  { label: 'Does Not Meet',        color: '#9B2C2C', bg: '#FFF5F5' },
+    not_assessed:   { label: 'Not Assessed',         color: '#718096', bg: '#F7FAFC' },
   }
 
   const ratingCounts = (ceId) => {
