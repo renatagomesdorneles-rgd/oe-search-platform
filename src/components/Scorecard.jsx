@@ -46,10 +46,11 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
 
   async function handleSave() {
     setSaving(true)
+    let saveErrors = []
     for (const criterion of criteria) {
       const score = scores[criterion.id]
       if (!score?.rating) continue
-      await supabase.from('scorecard_entries').upsert({
+      const { error } = await supabase.from('scorecard_entries').upsert({
         candidate_engagement_id: candidateEngagementId,
         criterion_id: criterion.id,
         rating: score.rating,
@@ -57,6 +58,12 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
         scored_by: profile.id,
         scored_at: new Date().toISOString(),
       }, { onConflict: 'candidate_engagement_id,criterion_id' })
+      if (error) saveErrors.push(`${criterion.name}: ${error.message}`)
+    }
+    if (saveErrors.length > 0) {
+      alert('Some scores failed to save:\n' + saveErrors.join('\n'))
+      setSaving(false)
+      return
     }
     if (recommendation) {
       await supabase.from('candidate_engagements').update({
