@@ -372,6 +372,10 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject }) {
                 </Section>
               )}
 
+              <Section title="Upload Documents">
+                <DocumentUpload candidateId={ce.candidates?.id} onUploaded={onClose} />
+              </Section>
+
               {[3, 4].includes(ce.pipeline_stage) && (
                 <Section title="Interview Tracking">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -433,6 +437,67 @@ function DocumentLink({ path, label }) {
         {loading ? 'Opening...' : 'Download'}
       </button>
     } />
+  )
+}
+
+function DocumentUpload({ candidateId, onUploaded }) {
+  const [resumeFile, setResumeFile] = useState(null)
+  const [coverFile, setCoverFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploaded, setUploaded] = useState(false)
+  const [error, setError] = useState('')
+
+  async function uploadFile(file, folder) {
+    const ext = file.name.split('.').pop()
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('documents').upload(path, file)
+    if (error) throw error
+    return path
+  }
+
+  async function handleUpload() {
+    if (!resumeFile && !coverFile) { setError('Please select at least one file to upload.'); return }
+    setUploading(true)
+    setError('')
+    try {
+      const updates = {}
+      if (resumeFile) updates.resume_url = await uploadFile(resumeFile, 'resumes')
+      if (coverFile) updates.cover_letter_url = await uploadFile(coverFile, 'cover-letters')
+      await supabase.from('candidates').update(updates).eq('id', candidateId)
+      setUploaded(true)
+      setResumeFile(null)
+      setCoverFile(null)
+      setTimeout(() => onUploaded(), 1000)
+    } catch (err) {
+      setError(err.message)
+    }
+    setUploading(false)
+  }
+
+  if (uploaded) return (
+    <div style={{ fontSize: 13, color: '#276749' }}>✓ Documents uploaded successfully.</div>
+  )
+
+  return (
+    <div>
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#4A5568', marginBottom: 5 }}>Resume</label>
+        <input type="file" accept=".pdf,.doc,.docx" onChange={e => setResumeFile(e.target.files[0])}
+          style={{ width: '100%', fontSize: 12, padding: '6px', border: '1px solid #CBD5E0', borderRadius: 6, boxSizing: 'border-box', background: '#FAFAFA' }} />
+        {resumeFile && <div style={{ fontSize: 11, color: '#38A169', marginTop: 3 }}>✓ {resumeFile.name}</div>}
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#4A5568', marginBottom: 5 }}>Cover Letter</label>
+        <input type="file" accept=".pdf,.doc,.docx" onChange={e => setCoverFile(e.target.files[0])}
+          style={{ width: '100%', fontSize: 12, padding: '6px', border: '1px solid #CBD5E0', borderRadius: 6, boxSizing: 'border-box', background: '#FAFAFA' }} />
+        {coverFile && <div style={{ fontSize: 11, color: '#38A169', marginTop: 3 }}>✓ {coverFile.name}</div>}
+      </div>
+      {error && <div style={{ fontSize: 12, color: '#C53030', marginBottom: 8 }}>{error}</div>}
+      <button onClick={handleUpload} disabled={uploading}
+        style={{ padding: '7px 16px', background: uploading ? '#A0AEC0' : '#0D2B45', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer' }}>
+        {uploading ? 'Uploading...' : 'Upload'}
+      </button>
+    </div>
   )
 }
 
