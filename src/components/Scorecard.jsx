@@ -22,6 +22,7 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
   const [criteria, setCriteria] = useState([])
   const [scores, setScores] = useState({})
   const [recommendation, setRecommendation] = useState('')
+  const [recommendationNotes, setRecommendationNotes] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -39,6 +40,7 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
     ;(existing || []).forEach(s => { scoreMap[s.criterion_id] = { rating: s.rating, narrative: s.narrative } })
     setScores(scoreMap)
     if (ce?.overall_recommendation) setRecommendation(ce.overall_recommendation)
+    if (ce?.recommendation_notes) setRecommendationNotes(ce.recommendation_notes)
     setLoading(false)
   }
 
@@ -57,7 +59,10 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
       }, { onConflict: 'candidate_engagement_id,criterion_id' })
     }
     if (recommendation) {
-      await supabase.from('candidate_engagements').update({ overall_recommendation: recommendation }).eq('id', candidateEngagementId)
+      await supabase.from('candidate_engagements').update({
+        overall_recommendation: recommendation,
+        recommendation_notes: recommendationNotes || null,
+      }).eq('id', candidateEngagementId)
     }
     setSaving(false)
     setSaved(true)
@@ -118,7 +123,7 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
 
       <div style={{ padding: 14, background: '#F7FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#0D2B45', marginBottom: 10 }}>Overall Recommendation</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 12 }}>
           {OVERALL_RATINGS.map(r => {
             const selected = recommendation === r.value
             return (
@@ -133,6 +138,9 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
             )
           })}
         </div>
+        <textarea value={recommendationNotes} onChange={e => setRecommendationNotes(e.target.value)}
+          placeholder="Comments on your overall recommendation..."
+          style={{ width: '100%', minHeight: 100, padding: '8px 10px', border: '1px solid #CBD5E0', borderRadius: 6, fontSize: 12, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: '#4A5568', lineHeight: 1.6 }} />
       </div>
     </div>
   )
