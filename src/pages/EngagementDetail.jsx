@@ -131,7 +131,8 @@ export default function EngagementDetail() {
                     <CandidateCard key={ce.id} ce={ce} stageNum={parseInt(stageNum)}
                       onOpen={() => setSelectedCandidate(ce)}
                       onReject={() => setShowRejection(ce)}
-                      onMoveNext={() => moveStage(ce.id, parseInt(stageNum) + 1)} />
+                      onMoveNext={() => moveStage(ce.id, parseInt(stageNum) + 1)}
+                      onMoveBack={() => moveStage(ce.id, parseInt(stageNum) - 1)} />
                   ))}
                 </div>
               </div>
@@ -230,6 +231,9 @@ function CandidateCard({ ce, stageNum, onOpen, onReject, onMoveNext }) {
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }} onClick={e => e.stopPropagation()}>
         {NOT_PROCEEDING_ELIGIBLE_STAGES.includes(stageNum) && (
           <button onClick={onReject} style={{ flex: 1, padding: '4px 8px', fontSize: 11, background: '#FFF5F5', color: '#C53030', border: '1px solid #FED7D7', borderRadius: 6, cursor: 'pointer' }}>Not Proceeding</button>
+        )}
+        {stageNum > 1 && (
+          <button onClick={onMoveBack} style={{ padding: '4px 8px', fontSize: 11, background: '#F7FAFC', color: '#718096', border: '1px solid #E2E8F0', borderRadius: 6, cursor: 'pointer' }}>← Back</button>
         )}
         {stageNum < 10 && (
           <button onClick={onMoveNext} style={{ flex: 1, padding: '4px 8px', fontSize: 11, background: '#EBF8FF', color: '#2B6CB0', border: '1px solid #BEE3F8', borderRadius: 6, cursor: 'pointer' }}>Advance →</button>
@@ -348,7 +352,12 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject }) {
                   )}
                 </div>
                 {!ce.not_proceeding && ce.pipeline_stage < 10 && (
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                    {ce.pipeline_stage > 1 && (
+                      <button onClick={() => onMoveStage(ce.pipeline_stage - 1)} style={{ padding: '7px 14px', fontSize: 12, background: '#F7FAFC', color: '#718096', border: '1px solid #E2E8F0', borderRadius: 6, cursor: 'pointer' }}>
+                        ← Back to {PIPELINE_STAGES[ce.pipeline_stage - 1]?.label}
+                      </button>
+                    )}
                     {canReject && <button onClick={onReject} style={{ padding: '7px 14px', fontSize: 12, background: '#FFF5F5', color: '#C53030', border: '1px solid #FED7D7', borderRadius: 6, cursor: 'pointer' }}>Not Proceeding</button>}
                     <button onClick={() => onMoveStage(ce.pipeline_stage + 1)} style={{ padding: '7px 14px', fontSize: 12, background: '#0D2B45', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
                       Move to {PIPELINE_STAGES[ce.pipeline_stage + 1]?.label} →
@@ -434,7 +443,7 @@ function DocumentLink({ path, label }) {
     <Row label={label} value={
       <button onClick={getSignedUrl} disabled={loading}
         style={{ background: 'none', border: 'none', color: '#2B6CB0', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, padding: 0, fontWeight: 500 }}>
-        {loading ? 'Opening...' : 'Download'}
+        {loading ? 'Opening...' : 'View'}
       </button>
     } />
   )
