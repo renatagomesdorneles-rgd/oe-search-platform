@@ -207,7 +207,7 @@ export default function EngagementDetail() {
   )
 }
 
-function CandidateCard({ ce, stageNum, onOpen, onReject, onMoveNext }) {
+function CandidateCard({ ce, stageNum, onOpen, onReject, onMoveNext, onMoveBack }) {
   const aging = getAgingStatus(ce.stage_entered_at, ce.pipeline_stage)
   const agingColors = { amber: { bg: '#FFFBEB', border: '#F6AD55', dot: '#ED8936' }, red: { bg: '#FFF5F5', border: '#FC8181', dot: '#E53E3E' } }
   const ac = agingColors[aging]
