@@ -292,7 +292,7 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject }) {
   const [activeTab, setActiveTab] = useState('details')
   const aging = getAgingStatus(ce.stage_entered_at, ce.pipeline_stage)
   const canReject = NOT_PROCEEDING_ELIGIBLE_STAGES.includes(ce.pipeline_stage) && !ce.not_proceeding
-  const showScorecard = ce.pipeline_stage >= 3 && !ce.not_proceeding
+  const showScorecard = ce.pipeline_stage >= 3
 
   async function saveNotes() {
     setSaving(true)
