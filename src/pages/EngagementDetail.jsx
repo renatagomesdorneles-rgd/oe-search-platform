@@ -49,6 +49,16 @@ export default function EngagementDetail() {
     fetchData()
   }
 
+  async function restoreCandidate(ceId) {
+    await supabase.from('candidate_engagements').update({
+      not_proceeding: false,
+      not_proceeding_reason: null,
+      not_proceeding_notes: null,
+      not_proceeding_at: null,
+    }).eq('id', ceId)
+    fetchData()
+  }
+
   async function markNotProceeding(ceId, reason, notes) {
     await supabase.from('candidate_engagements').update({
       not_proceeding: true, not_proceeding_reason: reason,
@@ -199,7 +209,8 @@ export default function EngagementDetail() {
         <CandidateModal ce={selectedCandidate} engagement={engagement}
           onClose={() => { setSelectedCandidate(null); fetchData() }}
           onMoveStage={(newStage) => { moveStage(selectedCandidate.id, newStage); fetchData() }}
-          onReject={() => { setShowRejection(selectedCandidate); setSelectedCandidate(null) }} />
+          onReject={() => { setShowRejection(selectedCandidate); setSelectedCandidate(null) }}
+          onRestore={() => { restoreCandidate(selectedCandidate.id); setSelectedCandidate(null) }} />
       )}
       {showRejection && <RejectionModal ce={showRejection} onClose={() => setShowRejection(null)} onConfirm={markNotProceeding} />}
       {showAddCandidate && <AddCandidateModal engagementId={id} onClose={() => setShowAddCandidate(false)} onAdded={() => { setShowAddCandidate(false); fetchData() }} />}
@@ -283,7 +294,7 @@ function CandidateTable({ candidates, onOpen }) {
   )
 }
 
-function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject }) {
+function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject, onRestore }) {
   const { profile } = useAuth()
   const [notes, setNotes] = useState(ce.general_notes || '')
   const [nextStep1, setNextStep1] = useState(ce.next_step_sent_1 || false)
@@ -351,6 +362,14 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject }) {
                     </div>
                   )}
                 </div>
+                {ce.not_proceeding && (
+                  <div style={{ marginTop: 12 }}>
+                    <button onClick={onRestore}
+                      style={{ padding: '7px 14px', fontSize: 12, background: '#E6FFFA', color: '#0B6E6E', border: '1px solid #0B6E6E', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                      ↩ Restore to Pipeline
+                    </button>
+                  </div>
+                )}
                 {!ce.not_proceeding && ce.pipeline_stage < 10 && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                     {ce.pipeline_stage > 1 && (
