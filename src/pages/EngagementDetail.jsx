@@ -393,6 +393,16 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject, onRest
                 <Row label="Source" value={ce.candidates?.entry_type === 'converted_from_prospect' ? 'Converted from prospect' : ce.application_source || 'Inbound application'} />
               </Section>
 
+              {ce.custom_question_responses && Object.keys(ce.custom_question_responses).length > 0 && (
+                <Section title="Application Questions">
+                  {engagement.assessment_criteria && null}
+                  <ApplicationQuestionResponses
+                    responses={ce.custom_question_responses}
+                    engagementId={engagement.id}
+                  />
+                </Section>
+              )}
+
               {(ce.candidates?.resume_url || ce.candidates?.cover_letter_url) && (
                 <Section title="Documents">
                   {ce.candidates?.resume_url && <DocumentLink path={ce.candidates.resume_url} label="Resume" />}
@@ -897,4 +907,29 @@ function SourceLinkGenerator({ slug }) {
       )}
     </div>
   )
+}
+
+function ApplicationQuestionResponses({ responses, engagementId }) {
+  const [questions, setQuestions] = useState([])
+
+  useEffect(() => {
+    supabase.from('engagement_form_questions')
+      .select('*')
+      .eq('engagement_id', engagementId)
+      .order('display_order')
+      .then(({ data }) => setQuestions(data || []))
+  }, [engagementId])
+
+  if (!questions.length) {
+    // Fallback: show raw responses if questions haven't loaded
+    return Object.entries(responses).map(([key, value]) => (
+      <Row key={key} label={key} value={String(value)} />
+    ))
+  }
+
+  return questions.map(q => {
+    const answer = responses[q.id]
+    if (!answer) return null
+    return <Row key={q.id} label={q.question_text} value={String(answer)} />
+  })
 }
