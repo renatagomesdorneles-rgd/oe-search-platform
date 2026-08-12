@@ -455,22 +455,26 @@ function CandidateModal({ ce, engagement, onClose, onMoveStage, onReject, onRest
 }
 
 function DocumentLink({ path, label }) {
-  const [url, setUrl] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  async function getSignedUrl() {
+  async function handleView() {
     setLoading(true)
     const { data } = await supabase.storage.from('documents').createSignedUrl(path, 60 * 60)
     if (data?.signedUrl) {
-      setUrl(data.signedUrl)
-      window.open(data.signedUrl, '_blank')
+      const isWord = path.match(/\.(doc|docx)$/i)
+      if (isWord) {
+        const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(data.signedUrl)}&embedded=true`
+        window.open(viewerUrl, '_blank')
+      } else {
+        window.open(data.signedUrl, '_blank')
+      }
     }
     setLoading(false)
   }
 
   return (
     <Row label={label} value={
-      <button onClick={getSignedUrl} disabled={loading}
+      <button onClick={handleView} disabled={loading}
         style={{ background: 'none', border: 'none', color: '#2B6CB0', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, padding: 0, fontWeight: 500 }}>
         {loading ? 'Opening...' : 'View'}
       </button>
