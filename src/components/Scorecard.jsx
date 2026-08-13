@@ -65,12 +65,10 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
       setSaving(false)
       return
     }
-    if (recommendation) {
-      await supabase.from('candidate_engagements').update({
-        overall_recommendation: recommendation,
-        recommendation_notes: recommendationNotes || null,
-      }).eq('id', candidateEngagementId)
-    }
+    await supabase.from('candidate_engagements').update({
+      overall_recommendation: recommendation || null,
+      recommendation_notes: recommendationNotes || null,
+    }).eq('id', candidateEngagementId)
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
