@@ -33,7 +33,7 @@ export default function Scorecard({ candidateEngagementId, engagementId }) {
     const [{ data: crit }, { data: existing }, { data: ce }] = await Promise.all([
       supabase.from('assessment_criteria').select('*').eq('engagement_id', engagementId).order('display_order'),
       supabase.from('scorecard_entries').select('*').eq('candidate_engagement_id', candidateEngagementId),
-      supabase.from('candidate_engagements').select('overall_recommendation').eq('id', candidateEngagementId).single(),
+      supabase.from('candidate_engagements').select('overall_recommendation, recommendation_notes').eq('id', candidateEngagementId).single(),
     ])
     setCriteria(crit || [])
     const scoreMap = {}
