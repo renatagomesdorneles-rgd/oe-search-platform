@@ -924,16 +924,49 @@ function ApplicationQuestionResponses({ responses, engagementId }) {
       .then(({ data }) => setQuestions(data || []))
   }, [engagementId])
 
-  if (!questions.length) {
-    // Fallback: show raw responses if questions haven't loaded
-    return Object.entries(responses).map(([key, value]) => (
-      <Row key={key} label={key} value={String(value)} />
-    ))
+  function getFlag(flagType, answer) {
+    const a = (answer || '').toLowerCase()
+    if (flagType === 'work_authorization') {
+      if (a === 'yes') return 'green'
+      if (a === 'no') return 'red'
+    }
+    if (flagType === 'location') {
+      if (a.includes('based in')) return 'green'
+      if (a.includes('willing to relocate')) return 'yellow'
+      if (a.includes('not open')) return 'red'
+    }
+    if (flagType === 'compensation') {
+      if (a.includes('yes')) return 'green'
+      if (a.includes('no')) return 'yellow'
+    }
+    return 'neutral'
   }
 
-  return questions.map(q => {
-    const answer = responses[q.id]
-    if (!answer) return null
-    return <Row key={q.id} label={q.question_text} value={String(answer)} />
-  })
+  const flagColors = {
+    green:   { bg: '#F0FFF4', color: '#276749', border: '#9AE6B4' },
+    yellow:  { bg: '#FFFBEB', color: '#B7791F', border: '#F6E05E' },
+    red:     { bg: '#FFF5F5', color: '#9B2C2C', border: '#FEB2B2' },
+    neutral: { bg: '#F7FAFC', color: '#4A5568', border: '#E2E8F0' },
+  }
+
+  const list = questions.length > 0 ? questions : Object.keys(responses).map(id => ({ id, question_text: id, flag_type: 'other' }))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {list.map(q => {
+        const answer = responses[q.id]
+        if (!answer) return null
+        const flag = getFlag(q.flag_type, answer)
+        const fc = flagColors[flag]
+        return (
+          <div key={q.id}>
+            <div style={{ fontSize: 11, color: '#A0AEC0', marginBottom: 4, lineHeight: 1.4 }}>{q.question_text}</div>
+            <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, background: fc.bg, color: fc.color, border: `1px solid ${fc.border}` }}>
+              {answer}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
 }

@@ -15,7 +15,7 @@ export default function FormQuestionsManager({ engagementId }) {
   const [saving, setSaving] = useState(false)
 
   // New question form state
-  const [newQ, setNewQ] = useState({ question_text: '', question_type: 'yes_no', options: ['', ''], required: true })
+  const [newQ, setNewQ] = useState({ question_text: '', question_type: 'yes_no', options: ['', ''], required: true, flag_type: 'other' })
 
   useEffect(() => { fetchQuestions() }, [engagementId])
 
@@ -44,6 +44,7 @@ export default function FormQuestionsManager({ engagementId }) {
       question_type: newQ.question_type,
       options,
       required: newQ.required,
+      flag_type: newQ.flag_type || 'other',
       display_order: questions.length,
     })
     if (error) {
@@ -138,10 +139,20 @@ export default function FormQuestionsManager({ engagementId }) {
                 ))}
               </select>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 22 }}>
-              <input type="checkbox" id="required" checked={newQ.required} onChange={e => setNewQ(q => ({ ...q, required: e.target.checked }))} style={{ cursor: 'pointer' }} />
-              <label htmlFor="required" style={{ fontSize: 13, color: '#4A5568', cursor: 'pointer' }}>Required</label>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#4A5568', marginBottom: 5 }}>Flag Type</label>
+              <select value={newQ.flag_type} onChange={e => setNewQ(q => ({ ...q, flag_type: e.target.value }))}
+                style={{ width: '100%', padding: '9px 12px', border: '1px solid #CBD5E0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }}>
+                <option value="other">General</option>
+                <option value="work_authorization">Work Authorization</option>
+                <option value="location">Location / Relocation</option>
+                <option value="compensation">Compensation</option>
+              </select>
             </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <input type="checkbox" id="required" checked={newQ.required} onChange={e => setNewQ(q => ({ ...q, required: e.target.checked }))} style={{ cursor: 'pointer' }} />
+            <label htmlFor="required" style={{ fontSize: 13, color: '#4A5568', cursor: 'pointer' }}>Required</label>
           </div>
 
           {newQ.question_type === 'yes_no' && (
