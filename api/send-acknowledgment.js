@@ -1,6 +1,6 @@
-const https = require('https')
+import https from 'node:https'
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -16,17 +16,13 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Missing RESEND_API_KEY' })
   }
 
-  // Default template
-  let subject = `Application received — ${roleTitle || 'the position'}`
-  let bodyText = `Dear ${candidateName},\n\nThank you for applying for the ${roleTitle || 'position'}${clientName ? ` at ${clientName}` : ''}. We have received your application and will be in touch as the search progresses.\n\nWe appreciate your interest in this opportunity.\n\nWarm regards,\nOE Consulting`
-
-  const htmlBody = `<div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a;">${bodyText.replace(/\n/g, '<br>')}</div>`
+  const body = `Dear ${candidateName},\n\nThank you for applying for the ${roleTitle || 'position'}${clientName ? ` at ${clientName}` : ''}. We have received your application and will be in touch as the search progresses.\n\nWe appreciate your interest in this opportunity.\n\nWarm regards,\nOE Consulting`
 
   const payload = JSON.stringify({
     from: 'OE Consulting <onboarding@resend.dev>',
     to: [candidateEmail],
-    subject,
-    html: htmlBody,
+    subject: `Application received — ${roleTitle || 'your application'}`,
+    html: `<div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a;">${body.replace(/\n/g, '<br>')}</div>`,
   })
 
   return new Promise((resolve) => {
@@ -42,13 +38,13 @@ module.exports = async function handler(req, res) {
     }
 
     const httpReq = https.request(options, (httpRes) => {
-      let body = ''
-      httpRes.on('data', chunk => body += chunk)
+      let responseBody = ''
+      httpRes.on('data', chunk => responseBody += chunk)
       httpRes.on('end', () => {
         if (httpRes.statusCode >= 200 && httpRes.statusCode < 300) {
           res.status(200).json({ success: true })
         } else {
-          res.status(500).json({ error: body })
+          res.status(500).json({ error: responseBody })
         }
         resolve()
       })
