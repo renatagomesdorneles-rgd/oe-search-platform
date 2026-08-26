@@ -60,14 +60,29 @@ export default function ApplicationForm() {
 
   async function sendAcknowledgmentEmail(candidateName, candidateEmail, roleTitle, clientName) {
     try {
-      const response = await fetch('/api/send-acknowledgment', {
+      const apiKey = import.meta.env.VITE_RESEND_API_KEY
+      if (!apiKey) { console.error('No Resend API key'); return false }
+
+      const body = `Dear ${candidateName},\n\nThank you for applying for the ${roleTitle || 'position'}${clientName ? ` at ${clientName}` : ''}. We have received your application and will be in touch as the search progresses.\n\nWe appreciate your interest in this opportunity.\n\nWarm regards,\nOE Consulting`
+
+      const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ candidateName, candidateEmail, roleTitle, clientName }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          from: 'OE Consulting <onboarding@resend.dev>',
+          to: [candidateEmail],
+          subject: `Application received — ${roleTitle || 'your application'}`,
+          html: `<div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a;">${body.replace(/\n/g, '<br>')}</div>`,
+        }),
       })
+      const data = await response.json()
+      console.log('Resend response:', response.status, data)
       return response.ok
     } catch (err) {
-      console.error('Acknowledgment email failed:', err)
+      console.error('Email error:', err)
       return false
     }
   }
