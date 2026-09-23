@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     from: 'OE Platform <onboarding@resend.dev>',
     to: ['renata.gomes.dorneles@oeconsulting.com'],
     reply_to: candidateEmail,
-    subject: `New application: ${candidateName} — ${roleTitle || 'position'}`,
+    subject: `Application Received: ${candidateName} — ${roleTitle || 'position'}`,
     html: `
       <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a;">
         <h2 style="color: #0D2B45; font-size: 18px;">New Application Received</h2>
