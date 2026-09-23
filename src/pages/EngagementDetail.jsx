@@ -212,7 +212,7 @@ export default function EngagementDetail() {
           onReject={() => { setShowRejection(selectedCandidate); setSelectedCandidate(null) }}
           onRestore={() => { restoreCandidate(selectedCandidate.id); setSelectedCandidate(null) }} />
       )}
-      {showRejection && <RejectionModal ce={showRejection} onClose={() => setShowRejection(null)} onConfirm={markNotProceeding} />}
+      {showRejection && <RejectionModal ce={showRejection} engagement={engagement} onClose={() => setShowRejection(null)} onConfirm={markNotProceeding} />}
       {showAddCandidate && <AddCandidateModal engagementId={id} onClose={() => setShowAddCandidate(false)} onAdded={() => { setShowAddCandidate(false); fetchData() }} />}
     </div>
   )
@@ -561,9 +561,51 @@ function Row({ label, value }) {
   )
 }
 
-function RejectionModal({ ce, onClose, onConfirm }) {
+function RejectionModal({ ce, engagement, onClose, onConfirm }) {
   const [reason, setReason] = useState('')
   const [notes, setNotes] = useState('')
+  const [sending, setSending] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+
+  async function handleConfirm() {
+    if (!reason) return
+    setSending(true)
+
+    // Load rejection template for this reason from Supabase storage
+    let templateSubject = null
+    let templateBody = null
+    try {
+      const { data } = await supabase.storage.from('documents').download('templates/rejection_templates.json')
+      if (data) {
+        const templates = JSON.parse(await data.text())
+        const tmpl = templates[reason]
+        if (tmpl) { templateSubject = tmpl.subject; templateBody = tmpl.body }
+      }
+    } catch (e) { /* use defaults */ }
+
+    // Send notification to Renata
+    try {
+      await fetch('https://oe-search-platform-3jc1.vercel.app/api/send-rejection-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidateName: ce.candidates?.full_name,
+          candidateEmail: ce.candidates?.email,
+          roleTitle: engagement?.role_title,
+          clientName: engagement?.client_name,
+          rejectionReason: REJECTION_REASONS[reason],
+          rejectionNotes: notes,
+          templateSubject,
+          templateBody,
+        }),
+      })
+      setEmailSent(true)
+    } catch (e) { /* notification failed silently */ }
+
+    onConfirm(ce.id, reason, notes)
+    setSending(false)
+  }
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}>
       <div style={{ background: '#fff', borderRadius: 12, padding: '2rem', width: 460 }}>
@@ -584,13 +626,13 @@ function RejectionModal({ ce, onClose, onConfirm }) {
             placeholder="Add any context..." />
         </div>
         <div style={{ background: '#EBF8FF', borderRadius: 8, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: '#2B6CB0', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Mail size={14} /> Rejection email template coming in Phase 4.
+          <Mail size={14} /> You'll receive an email with the rejection template ready to forward to the candidate.
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={{ padding: '9px 18px', border: '1px solid #CBD5E0', borderRadius: 8, background: '#fff', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={() => reason && onConfirm(ce.id, reason, notes)} disabled={!reason}
-            style={{ padding: '9px 18px', background: reason ? '#C53030' : '#ccc', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: reason ? 'pointer' : 'not-allowed' }}>
-            Confirm
+          <button onClick={handleConfirm} disabled={!reason || sending}
+            style={{ padding: '9px 18px', background: reason && !sending ? '#C53030' : '#ccc', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: reason && !sending ? 'pointer' : 'not-allowed' }}>
+            {sending ? 'Processing...' : 'Confirm'}
           </button>
         </div>
       </div>
