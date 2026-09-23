@@ -11,22 +11,24 @@ export default async function handler(req, res) {
   const { candidateName, candidateEmail, roleTitle, clientName } = req.body
 
   const apiKey = process.env.RESEND_API_KEY
-  
-  // Log everything for debugging
-  console.log('candidateEmail:', candidateEmail)
-  console.log('apiKey present:', !!apiKey)
-  console.log('apiKey prefix:', apiKey ? apiKey.substring(0, 8) : 'MISSING')
-
   if (!apiKey) return res.status(500).json({ error: 'RESEND_API_KEY not set' })
   if (!candidateEmail) return res.status(400).json({ error: 'Missing candidateEmail' })
 
-  const body = `Dear ${candidateName || 'Applicant'},\n\nThank you for applying for the ${roleTitle || 'position'}${clientName ? ` at ${clientName}` : ''}. We have received your application and will be in touch as the search progresses.\n\nWarm regards,\nOE Consulting`
-
   const payload = JSON.stringify({
-    from: 'OE Consulting <onboarding@resend.dev>',
-    to: [candidateEmail],
-    subject: `Application received — ${roleTitle || 'your application'}`,
-    html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:40px 20px;color:#1a1a1a">${body.replace(/\n/g,'<br>')}</div>`,
+    from: 'OE Platform <onboarding@resend.dev>',
+    to: ['renata.gomes.dorneles@oeconsulting.com'],
+    reply_to: candidateEmail,
+    subject: `New application: ${candidateName} — ${roleTitle || 'position'}`,
+    html: `
+      <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a;">
+        <h2 style="color: #0D2B45; font-size: 18px;">New Application Received</h2>
+        <p><strong>Candidate:</strong> ${candidateName}</p>
+        <p><strong>Email:</strong> <a href="mailto:${candidateEmail}">${candidateEmail}</a></p>
+        <p><strong>Position:</strong> ${roleTitle || '—'}${clientName ? ` at ${clientName}` : ''}</p>
+        <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 24px 0;" />
+        <p style="color: #718096; font-size: 13px;">Reply to this email to send your acknowledgment directly to the candidate. Their email address is pre-filled in the reply-to field.</p>
+      </div>
+    `,
   })
 
   return new Promise((resolve) => {
@@ -45,19 +47,16 @@ export default async function handler(req, res) {
       let responseBody = ''
       httpRes.on('data', chunk => responseBody += chunk)
       httpRes.on('end', () => {
-        console.log('Resend status:', httpRes.statusCode)
-        console.log('Resend response:', responseBody)
         if (httpRes.statusCode >= 200 && httpRes.statusCode < 300) {
           res.status(200).json({ success: true })
         } else {
-          res.status(500).json({ error: responseBody, status: httpRes.statusCode })
+          res.status(500).json({ error: responseBody })
         }
         resolve()
       })
     })
 
     httpReq.on('error', (err) => {
-      console.log('HTTPS error:', err.message)
       res.status(500).json({ error: err.message })
       resolve()
     })
